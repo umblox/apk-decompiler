@@ -28,21 +28,14 @@ jobs:
           echo "File APK ditemukan: $APK_FILE"
           ./jadx_bin/bin/jadx -d hasil_decompile "$APK_FILE" || true
 
-      - name: Tampilkan Kode Utama Aplikasi
+      - name: Tampilkan Hanya Kode Pengirim Webhook
         run: |
-          echo "=== 1. DAFTAR FILE KODE UTAMA (NON-LIBRARY) ==="
-          find hasil_decompile/sources -type f \( -name "*.java" -o -name "*.kt" \) \
-            | grep -v -E "androidx/|kotlin/|kotlinx/|com/google/|android/support/|okhttp3/|okio/|retrofit2/|org/intellij/|org/jetbrains/"
+          echo "=== DAFTAR FILE DI com/ger/notificationwebhookapp ==="
+          ls -la hasil_decompile/sources/com/ger/notificationwebhookapp/
 
-          echo ""
-          echo "=== 2. ISI LENGKAP SELURUH FILE KODE UTAMA ==="
-          for f in $(find hasil_decompile/sources -type f \( -name "*.java" -o -name "*.kt" \) | grep -v -E "androidx/|kotlin/|kotlinx/|com/google/|android/support/|okhttp3/|okio/|retrofit2/|org/intellij/|org/jetbrains/"); do
-            echo "=========================================="
-            echo "FILE: $f"
-            echo "=========================================="
-            cat "$f"
-            echo ""
-          done
+          echo "=== ISI FILE SERVICE / PENGIRIM HTTP ==="
+          grep -rn -C 40 -E "http|HttpURLConnection|OkHttp|JSONObject|kunciEntri|X-API-Token|updateStatus" hasil_decompile/sources/com/ger/notificationwebhookapp/ || true
+
 
       - name: Upload Source Code Hasil Decompile
         uses: actions/upload-artifact@v4
