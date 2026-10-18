@@ -12,23 +12,40 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install JADX & Decompile APK Asli
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Download JADX & Decompile APK
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jadx
-          jadx -d hasil_decompile asli.apk || true
+          wget -q https://github.com/skylot/jadx/releases/download/v1.5.1/jadx-1.5.1.zip
+          unzip -q jadx-1.5.1.zip -d jadx_bin
+          chmod +x jadx_bin/bin/jadx
 
-      - name: Cari Kode Pengiriman Webhook
+          APK_FILE=$(find . -maxdepth 2 -name "*.apk" | head -n 1)
+          echo "File APK ditemukan: $APK_FILE"
+          ./jadx_bin/bin/jadx -d hasil_decompile "$APK_FILE" || true
+
+      - name: Tampilkan Kode Utama Aplikasi
         run: |
-          echo "=== DAFTAR FILE KODE APLIKASI ==="
-          find hasil_decompile/sources -type f \( -name "*.java" -o -name "*.kt" \) | grep -v -E "androidx|kotlin|google|android/support|kotlinx|okhttp3|okio|retrofit2"
+          echo "=== 1. DAFTAR FILE KODE UTAMA (NON-LIBRARY) ==="
+          find hasil_decompile/sources -type f \( -name "*.java" -o -name "*.kt" \) \
+            | grep -v -E "androidx/|kotlin/|kotlinx/|com/google/|android/support/|okhttp3/|okio/|retrofit2/|org/intellij/|org/jetbrains/"
 
-          echo "=== ISI KODE WEBHOOK (kunciEntri / harga_transaksi / X-API-Token) ==="
-          grep -rn -C 25 -E "kunciEntri|harga_transaksi|updateStatus|X-API-Token|statusBaru" hasil_decompile/sources/ || true
+          echo ""
+          echo "=== 2. ISI LENGKAP SELURUH FILE KODE UTAMA ==="
+          for f in $(find hasil_decompile/sources -type f \( -name "*.java" -o -name "*.kt" \) | grep -v -E "androidx/|kotlin/|kotlinx/|com/google/|android/support/|okhttp3/|okio/|retrofit2/|org/intellij/|org/jetbrains/"); do
+            echo "=========================================="
+            echo "FILE: $f"
+            echo "=========================================="
+            cat "$f"
+            echo ""
+          done
 
-      - name: Upload Seluruh Source Code Hasil Decompile
+      - name: Upload Source Code Hasil Decompile
         uses: actions/upload-artifact@v4
         with:
           name: Source-Code-APK-Asli
-          path: hasil_decompile/sources/
-          
+          path: hasil_decompile/
