@@ -1,0 +1,34 @@
+name: Decompile APK Asli
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  decompile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install JADX & Decompile APK Asli
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jadx
+          jadx -d hasil_decompile asli.apk || true
+
+      - name: Cari Kode Pengiriman Webhook
+        run: |
+          echo "=== DAFTAR FILE KODE APLIKASI ==="
+          find hasil_decompile/sources -type f \( -name "*.java" -o -name "*.kt" \) | grep -v -E "androidx|kotlin|google|android/support|kotlinx|okhttp3|okio|retrofit2"
+
+          echo "=== ISI KODE WEBHOOK (kunciEntri / harga_transaksi / X-API-Token) ==="
+          grep -rn -C 25 -E "kunciEntri|harga_transaksi|updateStatus|X-API-Token|statusBaru" hasil_decompile/sources/ || true
+
+      - name: Upload Seluruh Source Code Hasil Decompile
+        uses: actions/upload-artifact@v4
+        with:
+          name: Source-Code-APK-Asli
+          path: hasil_decompile/sources/
+          
