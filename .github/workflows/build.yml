@@ -28,17 +28,10 @@ jobs:
           echo "File APK ditemukan: $APK_FILE"
           ./jadx_bin/bin/jadx -d hasil_decompile "$APK_FILE" || true
 
-      - name: Tampilkan Hanya Kode Pengirim Webhook
+      - name: Tampilkan Isi NotificationListener Mulai Baris 60
         run: |
-          echo "=== DAFTAR FILE DI com/ger/notificationwebhookapp ==="
-          ls -la hasil_decompile/sources/com/ger/notificationwebhookapp/
+          echo "=== LANJUTAN NotificationListener.java (BARIS 60 - SELESAI) ==="
+          tail -n +60 hasil_decompile/sources/com/ger/notificationwebhookapp/NotificationListener.java
 
-          echo "=== ISI FILE SERVICE / PENGIRIM HTTP ==="
-          grep -rn -C 40 -E "http|HttpURLConnection|OkHttp|JSONObject|kunciEntri|X-API-Token|updateStatus" hasil_decompile/sources/com/ger/notificationwebhookapp/ || true
-
-
-      - name: Upload Source Code Hasil Decompile
-        uses: actions/upload-artifact@v4
-        with:
-          name: Source-Code-APK-Asli
-          path: hasil_decompile/
+          echo "=== ISI WebhookProfile.java ==="
+          cat hasil_decompile/sources/com/ger/notificationwebhookapp/WebhookProfile.java
